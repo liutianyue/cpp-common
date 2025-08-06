@@ -20,6 +20,7 @@ class OssStorageProvider : public StorageProvider {
   OssStorageProvider();
 
   absl::StatusOr<FileList> List(const std::string &bucket, const std::string &path) override;
+  absl::StatusOr<std::pair<FileList, FileList>> ListWithDir(const std::string &bucket, const std::string &path);
   absl::Status Upload(const TransferMeta &m) override;
   absl::Status DownloadFile(const TransferMeta &meta) override;
   absl::StatusOr<FilePathList> Download(const TransferMeta &meta) override;

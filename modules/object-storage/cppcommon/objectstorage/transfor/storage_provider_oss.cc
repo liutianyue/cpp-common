@@ -82,6 +82,28 @@ absl::StatusOr<FileList> OssStorageProvider::List(const std::string &bucket, con
   return keys;
 }
 
+absl::StatusOr<std::pair<FileList, FileList>> OssStorageProvider::ListWithDir(const std::string &bucket, const std::string &path) {
+  FileList files;
+  FileList dirs;
+  oss::ListObjectsRequest request(bucket);
+  request.setPrefix(path);
+  request.setDelimiter("/");
+
+  auto outcome = client_->ListObjects(request);
+  if (!outcome.isSuccess()) {
+    spdlog::error("[OSS::List] Error: {}", outcome.error().Message());
+    return std::make_pair(files, dirs);
+  }
+
+  for (const auto &obj : outcome.result().ObjectSummarys()) {
+    files.emplace_back(obj.Key());
+  }
+  for (const auto &obj : outcome.result().CommonPrefixes()) {
+    dirs.emplace_back(obj);
+  }
+  return std::make_pair(files, dirs);
+}
+
 absl::Status OssStorageProvider::Upload(const TransferMeta &meta) {
   std::shared_ptr<std::iostream> fin =
       std::make_shared<std::fstream>(meta.local_file_path, std::ios::in | std::ios::binary);
